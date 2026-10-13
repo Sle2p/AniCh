@@ -59,6 +59,7 @@ dependencies:
   permission_handler: ^11.3.1 # 权限管理
   path_provider: ^2.1.4 # 常用路径
   url_launcher: ^6.3.0 #打开链接
+  battery_plus: ^6.0.2 # 电池信息（需 >= 6.0.2 修复 Mac mini / iMac 等台式机播放视频空数组越界闪退）
 
   # Widget
   flutter_staggered_grid_view: ^0.7.0 # 瀑布流
