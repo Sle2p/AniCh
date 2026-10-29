@@ -167,11 +167,12 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// 鼠标滑动
+// 鼠标、触控板滑动
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
+        // 桌面端允许鼠标拖动列表滚动
+        ...super.dragDevices,
         PointerDeviceKind.mouse,
       };
 }
