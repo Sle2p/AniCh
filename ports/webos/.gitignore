@@ -1,0 +1,12 @@
+# Build outputs and SDK-generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+/build/
+/webos/flutter/
+.pub-cache/
+.pub/
+*.ipk
+*.log
+.DS_Store
+/.api-check/

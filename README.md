@@ -45,3 +45,9 @@
 > 源码对应版本 [1.0.0](https://github.com/Sle2p/AniCh/releases/tag/1.0.0)
 >
 > 日期：2024-08-25
+
+## webOS TV 移植
+
+LG webOS TV 的独立原生 Flutter 移植位于 [ports/webos](ports/webos/README.md)，包含电视遥控操作、硬件视频播放、弹幕与本地播放设置。支持范围、Linux 构建、Developer Mode 安装、验证状态及已知限制请参阅该目录说明。
+
+该子项目基于本仓库公开源码单独维护，不改变根目录原有平台的实现，也不代表后续发行版全部功能均已移植。

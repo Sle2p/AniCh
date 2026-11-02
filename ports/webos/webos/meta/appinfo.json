@@ -1,0 +1,22 @@
+{
+  "id": "com.anich.tv",
+  "version": "1.0.11",
+  "vendor": "Personal AniCh TV port",
+  "type": "native",
+  "resolution": "1920x1080",
+  "main": "xs",
+  "title": "AniCh TV",
+  "icon": "icon.png",
+  "iconColor": "#ffffff",
+  "largeIcon": "icon.png",
+  "handlesRelaunch": true,
+  "visible": true,
+  "defaultWindowType": "card",
+  "trustLevel": "default",
+  "locationHint": "none",
+  "noSplashOnLaunch": true,
+  "spinnerOnLaunch": false,
+  "transparent": true,
+  "uiRevision": 2,
+  "requiredACG": []
+}

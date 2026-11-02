@@ -1,0 +1,13 @@
+Noto Sans SC Regular for AniCh TV
+
+Upstream: https://github.com/notofonts/noto-cjk
+Commit: f8d157532fbfaeda587e826d4cd5b21a49186f7c
+Font source: https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf
+License source: https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/LICENSE
+License: SIL Open Font License 1.1 (see NotoSansSC-OFL.txt)
+Copyright notice embedded in the font: © 2014-2021 Adobe (http://www.adobe.com/).
+SHA-256: faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9
+
+This is the unmodified upstream Simplified Chinese subset OTF, Regular weight.
+The TV theme uses this one static 400-weight font, including Latin and Chinese
+characters. Other platforms retain their existing Ubuntu font configuration.
