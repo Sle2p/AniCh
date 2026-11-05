@@ -40,6 +40,9 @@ class BangumiIndexView extends StatelessWidget {
               return KeepAliveWrapper(
                   child: NotificationListener<ScrollEndNotification>(
                 onNotification: (notification) {
+                  if (notification.metrics.axis != Axis.vertical) {
+                    return false;
+                  }
                   final metrics = notification.metrics;
                   if (metrics.atEdge) {
                     bool isTop = metrics.pixels == 0;

@@ -1,6 +1,6 @@
 # webOS 移植实施说明
 
-本文面向审阅者和后续维护者，说明 TV 1.0.11 独立 `ports/webos` 子项目的实现及验证边界。以下路径以该子项目为基准，验证结果统一列于文末。
+本文面向审阅者和后续维护者，说明 TV 1.0.12（20261105）独立 `ports/webos` 子项目的实现及验证边界。以下路径以该子项目为基准，当前结果与 1.0.11 历史验证分别列于文末。
 
 ## 范围与目录
 
@@ -101,6 +101,18 @@ B 站优先采用完整 `idStr`，避免旧 32 位字段截断导致碰撞；相
 
 `TvPlayerPanelCoordinator` 统一管理播放页和线路／选集面板的归属，在对应面板内保留局部按键处理：同键关闭，绿／黄键切换到另一面板；红／蓝键先关闭面板再执行动作，避免重复事件叠加多个面板。返回、标题关闭或选中项目都会清理面板归属。其他系统对话框仍阻止底层播放快捷键。面板测试与以下真实页面集成测试分别覆盖局部交互和路由生命周期。
 
+### 1.0.12 焦点滚动与轴隔离
+
+本轮处理左右移动焦点时页面发生非预期纵向跳动的问题。旧焦点处理在每次获得焦点后调用 `Scrollable.ensureVisible(alignment: 0.5)`；即使卡片已经位于可见范围，也会尝试居中，并可能移动外层滚动容器。
+
+`TvFocusableAction._onFocusChanged` 改为在帧后确认 widget 仍挂载、节点仍持有主焦点，并取得仍 attached 的 RenderObject，再调用 `showOnScreen`，保持 160ms 和 `Curves.easeOut` 动画。该调用按裁切范围揭示控件，已可见部分不强制重新居中，也能处理较深位置的初始 autofocus。方向键仍调用 `FocusScope.focusInDirection`，保留 Flutter 默认方向遍历策略，没有另写全局焦点排序规则。
+
+另一个独立问题是横向子列表的 `ScrollNotification` 冒泡到页面级监听器。六处纵向监听现在先检查 `notification.metrics.axis`，非纵向通知直接返回 false，不写入纵向状态或进入纵向分页判断，通知仍可正常向外传播。修改范围为 `pages/bangumi/view.dart`、`pages/bangumi/views/index.dart`、`pages/bangumi_detail/view.dart`、`pages/bangumi_vod/view.dart`、`pages/bangumi_genre_list/view.dart` 和 `pages/bangumi_mark_list/view.dart`；这些路径位于 `lib/src/` 下。过滤仅区分滚动轴，不改变原有纵向分页阈值或加载逻辑。
+
+`tv_focus_scroll_test.dart` 新增 5 项回归，覆盖可见行内左右移动、嵌套横向列表、`NestedScrollView` 内外两个纵向位置、上下移动揭示越界项目，以及较深位置 autofocus 与相邻可见项目的稳定性。`tv_scroll_notifications_test.dart` 的 2 项用例使用真实年份筛选和番剧网格，分别验证横向到底不请求下一页、纵向网格仍能按原条件分页。
+
+这 7 项回归同时覆盖问题修复和既有行为保留。旧／新实现对照中，可见行左右切换在旧实现下会将纵向位置从 350 移至 290，修复后保持原位；上下导航和深层 autofocus 用例用于防止既有功能退化。横向年份筛选的回归场景中，旧实现错误请求下一页 2 次，修复后为 0；正常纵向滚动到底的分页仍通过。该结果验证焦点与通知处理逻辑，不代替实体遥控器上的视觉确认。
+
 ### 播放页参数生命周期
 
 1.0.10 的 `BangumiVodPage.build` 每次重建都读取 `Get.arguments`。线路／选集面板成为顶部路由时，Get 的全局当前参数变成面板的空参数；底层播放页随路由状态重建，继续把该值当作番剧参数读取，导致异常和白屏。该错误发生在页面与路由的集成处，单独测试面板切换并不足以发现。
@@ -200,7 +212,9 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 
 ### 安装
 
-使用 README 中的 Developer Mode 与 `ares-setup-device`、`ares-novacom --getkey`、`ares-install`、`ares-launch` 流程。正常开发者升级不需要 root，也不需要写入系统分区。不得将个人设备配置、开发者密钥、账号数据、原始调试日志或家庭场景截图提交到此仓库。
+使用 README 中的 Developer Mode 与 `ares-setup-device`、`ares-novacom --getkey`、`ares-install` 流程；需要打开应用时再单独执行 `ares-launch`。正常开发者升级不需要 root，也不需要写入系统分区。不得将个人设备配置、开发者密钥、账号数据、原始调试日志或家庭场景截图提交到此仓库。
+
+1.0.12 本轮安装方案仅包括后台升级和只读版本／载荷核验，不主动启动应用、不切换电视画面。设备连接暂不可用，安装尚未完成；后续即使完成载荷核验，也不包含本版左右焦点视觉表现、运行时 DPR、字体加载或视频解码验证，旧 `displayInfo` 记录不能作为新版本已经运行的证据。
 
 ## 测试与实机证据
 
@@ -215,6 +229,8 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 | `playback_danmaku_toggle_test.dart` | 暂停／继续、隐藏／显示和用户手动开关状态 |
 | `playback_preferences_test.dart` | 偏好持久化、换线预算与环绕、线路记忆、自动全屏、分集观看记录 |
 | `tv_focusable_action_test.dart`、`tv_navigation_test.dart` | 焦点遍历、单次激活和电视入口 |
+| `tv_focus_scroll_test.dart` | 1.0.12 新增 5 项：可见行左右移动、横向嵌套、内外纵向位置、上下揭示和深层 autofocus |
+| `tv_scroll_notifications_test.dart` | 1.0.12 新增 2 项：真实横向年份筛选不分页、真实纵向网格按原条件分页 |
 | `tv_player_shortcuts_test.dart`、`tv_player_panels_test.dart` | 彩键与子焦点、重复／合成事件、弹窗与页面隔离、同键关闭、绿／黄互换、红／蓝关闭后执行、返回／选中后的归属清理 |
 | `bangumi_vod_route_arguments_test.dart` | 真实 Get 路由与播放页集成；顶部面板参数为空时页面身份保留；蓝键、面板与全屏交替；成功小窗布局与 Video 重挂载；初始化／数据绑定不重复 |
 | `collection_pagination_test.dart`、`search_history_test.dart` | 分页边界、本地搜索记录去重和上限 |
@@ -222,9 +238,13 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 | `tv_font_settings_test.dart`、`tv_render_settings_test.dart` | 字体偏好、严格文本协议、保存失败、当前／下次模式分离 |
 | `native/render_scale_test.cc` | runner 侧路径和严格解析，与 Dart 协议一致 |
 
-公开的 1.0.11 子项目已在干净副本中使用规范 `pub.dev` 锁文件通过 `pub get --enforce-lockfile`；按本文命令分析为 **0 error、0 warning、86 info**，完整 Flutter 回归 **90/90** 通过，ARM release 编译及 IPK 打包成功。独立公开目录验证与此前电视开发目录结果一致。
+**1.0.12：** 完整 Flutter 回归 **97/97** 通过，静态分析 **0 error、0 warning、86 info**；新增 5 项焦点和 2 项通知回归，包含旧版问题复现及上下导航、深层 autofocus、纵向分页的行为保留验证。公开目录已同步本轮 11 个源文件，对比确认实现一致，仅存在空白规范化差异。该实现的 ARM release 编译与 IPK 打包已成功，未重复从公开目录做第二次构建。检查 IPK 的 control 归档仅有 `control` 元数据文件，没有安装脚本；后台安装和设备载荷核验尚未完成。
+
+**1.0.11 历史基线：** 公开子项目已在干净副本中使用规范 `pub.dev` 锁文件通过 `pub get --enforce-lockfile`；按本文命令分析为 **0 error、0 warning、86 info**，完整 Flutter 回归 **90/90** 通过，ARM release 编译及 IPK 打包成功。独立公开目录验证与此前电视开发目录结果一致。
 
 ### 实机和用户确认
+
+1.0.12 当前设备连接暂不可用，后台安装、已安装版本及载荷核验尚未完成。本版已完成的证据限于自动测试、静态分析和编译打包，新的左右焦点交互尚未实机验证。本轮未发送应用启动、设备唤醒或切换画面的命令；设备恢复可连接后，安装结果另行更新。
 
 1.0.11 ARM release 已构建、安装并启动，电视上的 `libapp.so`、`appinfo.json`、`xs` 和视频插件四项载荷哈希与打包文件一致。启动指标确认版本 1.0.11、DPR2、逻辑 1920×1080、physical size 3840×2160，LG 系统字体已加载。
 
@@ -236,6 +256,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 
 仍需区分以下未验证项目：
 
+- 1.0.12 焦点按需滚动及横向通知隔离的实体遥控器视觉表现。
 - 正常用户登录后的追番、收藏、评论等完整线上流程。
 - 其他电视、固件、地区字体和所有编码／网络线路。
 - 1080p 与内部 4K 模式下的最终面板合成尺寸和稳定清晰度收益。

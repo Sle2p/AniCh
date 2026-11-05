@@ -43,10 +43,14 @@ class _TvFocusableActionState extends State<TvFocusableAction> {
     setState(() => _focused = focused);
     if (focused) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_focusNode.hasFocus) return;
-        Scrollable.ensureVisible(
-          context,
-          alignment: 0.5,
+        if (!mounted || !_focusNode.hasPrimaryFocus) return;
+        // Reveal only clipped content. Explicit alignment would recenter even
+        // a visible card, then repeat that movement in every outer scrollable.
+        // showOnScreen keeps visible cards in place and still reveals an
+        // offscreen autofocus target at the nearest edge of its viewport.
+        final target = context.findRenderObject();
+        if (target == null || !target.attached) return;
+        target.showOnScreen(
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOut,
         );
@@ -56,7 +60,8 @@ class _TvFocusableActionState extends State<TvFocusableAction> {
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     final key = event.logicalKey;
-    final activate = key == LogicalKeyboardKey.enter ||
+    final activate =
+        key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter ||
         key == LogicalKeyboardKey.select ||
         key == LogicalKeyboardKey.space;

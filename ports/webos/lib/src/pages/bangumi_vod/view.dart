@@ -170,6 +170,9 @@ class BangumiVodPageState extends State<BangumiVodPage> {
                 controller: _pageScroll,
                 body: NotificationListener<ScrollNotification>(
                   onNotification: (notification) {
+                    if (notification.metrics.axis != Axis.vertical) {
+                      return false;
+                    }
                     final pixels = notification.metrics.pixels.toInt();
                     if ((pixels - scrollHeight.value).abs() >= 50) {
                       final lastScrollStatus = scrollStatus.value;
