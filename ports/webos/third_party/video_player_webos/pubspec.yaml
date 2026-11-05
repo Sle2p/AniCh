@@ -1,0 +1,23 @@
+name: video_player_webos
+description: Flutter plugin for displaying inline video with other Flutter widgets on Webos
+version: 1.0.0
+
+environment:
+  sdk: '>=3.0.5 <4.0.0'
+  flutter: ">=2.5.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  video_player_platform_interface: ^6.3.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  pigeon: ^18.0.0
+
+flutter:
+  plugin:
+    platforms:
+      webos:
+        dartPluginClass: VideoPlayerWebOs
+        pluginClass: VideoPlayerWebOsPlugin
